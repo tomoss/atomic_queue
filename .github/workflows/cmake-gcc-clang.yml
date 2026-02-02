@@ -58,6 +58,14 @@ jobs:
           # --- Windows ---
           - os: windows-latest
             build_type: Release
+            compiler: { c: gcc, cpp: g++ }
+
+          - os: windows-latest
+            build_type: Release
+            compiler: { c: clang, cpp: clang++ }
+
+          - os: windows-latest
+            build_type: Release
             compiler: { c: cl, cpp: cl }
 
     steps:
@@ -70,13 +78,24 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Install boost
+    - name: Install Boost via apt (Linux)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         sudo apt-get install --yes -qq libboost-all-dev
 
-    - name: Install Boost via vcpkg (Windows)
-      if: startsWith(matrix.os, 'windows')
+    - name: Install Boost via MSYS2 (Windows - MinGW)
+      if: startsWith(matrix.os, 'windows') && (matrix.compiler.cpp == 'g++' || matrix.compiler.cpp == 'clang++')
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >
+          base-devel
+          mingw-w64-x86_64-toolchain
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-boost
+
+    - name: Install Boost via vcpkg (Windows - MSVC)
+      if: startsWith(matrix.os, 'windows') && matrix.compiler.cpp == 'cl'
       run: |
         # 1. Install Boost using the Microsoft Package Manager
         # windows-latest has vcpkg pre-installed at C:\vcpkg
@@ -100,11 +119,28 @@ jobs:
         -DATOMIC_QUEUE_BUILD_TESTS=ON
         -DATOMIC_QUEUE_BUILD_EXAMPLES=ON
         -S ${{ github.workspace }}
+    
+    - name: Configure CMake Windows - GCC/Clang
+      if: startsWith(matrix.os, 'windows') && (matrix.compiler.cpp == 'g++' || matrix.compiler.cpp == 'clang++')
+      shell: msys2 {0}
+      env:
+        MSYSTEM: MINGW64
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -G "MinGW Makefiles"
+        -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cpp }}
+        -DCMAKE_C_COMPILER=${{ matrix.compiler.c }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DATOMIC_QUEUE_BUILD_TESTS=ON
+        -DATOMIC_QUEUE_BUILD_EXAMPLES=ON
+        -S .  
 
     - name: Configure CMake Windows - MSVC
       if: startsWith(matrix.os, 'windows') && matrix.compiler.cpp == 'cl'
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cpp }}
+        -DCMAKE_C_COMPILER=${{ matrix.compiler.c }}
         -DATOMIC_QUEUE_BUILD_TESTS=ON
         -DATOMIC_QUEUE_BUILD_EXAMPLES=ON
         -S ${{ github.workspace }}
