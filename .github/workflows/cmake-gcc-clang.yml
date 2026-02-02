@@ -76,7 +76,9 @@ jobs:
       id: strings
       shell: bash
       run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        # CHANGED: We now use a relative path "build" instead of absolute.
+        # This prevents MSYS2 from trying to "convert" the path and corrupting it.
+        echo "build-output-dir=build" >> "$GITHUB_OUTPUT"
 
     - name: Install Boost via apt (Linux)
       if: startsWith(matrix.os, 'ubuntu')
