@@ -140,7 +140,7 @@ jobs:
       if: startsWith(matrix.os, 'windows') && (matrix.compiler.cpp == 'g++' || matrix.compiler.cpp == 'clang++')
       shell: msys2 {0}
       env:
-        MSYSTEM: MINGW64
+        MSYSTEM: UCRT64
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         -G "MinGW Makefiles"
