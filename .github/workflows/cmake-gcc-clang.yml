@@ -85,8 +85,8 @@ jobs:
       run: |
         sudo apt-get install --yes -qq libboost-all-dev
 
-    - name: Install Boost via MSYS2 (Windows - GCC)
-      if: startsWith(matrix.os, 'windows') && matrix.compiler.cpp == 'g++'
+    - name: Install Boost via MSYS2 (Windows - GCC/Clang)
+      if: startsWith(matrix.os, 'windows') && (matrix.compiler.cpp == 'g++' || matrix.compiler.cpp == 'clang++')
       uses: msys2/setup-msys2@v2
       with:
         msystem: UCRT64
@@ -94,21 +94,8 @@ jobs:
         install: >
           base-devel
           mingw-w64-ucrt-x86_64-gcc
-          mingw-w64-ucrt-x86_64-make
-          mingw-w64-ucrt-x86_64-cmake
-          mingw-w64-ucrt-x86_64-boost
-
-    - name: Install Boost via MSYS2 (Windows - Clang)
-      if: startsWith(matrix.os, 'windows') && matrix.compiler.cpp == 'clang++'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: UCRT64
-        update: true
-        install: >
-          base-devel
-          mingw-w64-ucrt-x86_64-gcc
-          mingw-w64-ucrt-x86_64-make
           mingw-w64-ucrt-x86_64-clang
+          mingw-w64-ucrt-x86_64-make
           mingw-w64-ucrt-x86_64-cmake
           mingw-w64-ucrt-x86_64-boost
 
